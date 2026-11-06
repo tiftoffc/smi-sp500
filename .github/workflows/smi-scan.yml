@@ -1,0 +1,38 @@
+name: SMI Scan
+
+on:
+  schedule:
+    # Täglich um 22:30 UTC (nach US-Marktschluss)
+    - cron: '30 22 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run SMI scanner
+        run: python scripts/smi_scanner.py
+
+      - name: Commit and push JSON
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/smi_scan.json
+          git diff --staged --quiet || git commit -m "Update SMI scan $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
