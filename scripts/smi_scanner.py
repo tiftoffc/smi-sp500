@@ -89,10 +89,7 @@ def scan():
             last_signal = float(signal.iloc[-1])
             diff = last_smi - last_signal
 
-            # Neuer Filter: SMI <= -30 und Diff >= 3
-            if not (last_smi <= -30 and diff >= 3):
-                continue
-
+           
             pct_1d = None
             pct_1w = None
             if len(close) >= 2:
