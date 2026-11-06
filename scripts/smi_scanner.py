@@ -12,43 +12,24 @@ import yfinance as yf
 from datetime import datetime, timezone
 from collections import defaultdict
 import warnings
-import requests
-from io import StringIO
+
 
 warnings.filterwarnings('ignore')
 
-def get_sp500_tickers():
-    """Fetch S&P 500 tickers. Tries Wikipedia, falls back to a reliable static source."""
-    # Versuch 1: Wikipedia mit StringIO
-    try:
-        url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        }
-        response = requests.get(url, headers=headers, timeout=30)
-        response.raise_for_status()
-        tables = pd.read_html(StringIO(response.text))
-        df = tables[0]
-        df['yf_ticker'] = df['Symbol'].str.replace('.', '-', regex=False)
-        print(f"Loaded {len(df)} tickers from Wikipedia")
-        return df
-    except Exception as e:
-        print(f"Wikipedia failed: {e}")
 
-    # Versuch 2: Alternative Quelle (GitHub raw CSV, sehr stabil)
-    try:
-        alt_url = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/master/data/constituents.csv"
-        df = pd.read_csv(alt_url)
-        df = df.rename(columns={'Symbol': 'Symbol'})
-        df['yf_ticker'] = df['Symbol'].str.replace('.', '-', regex=False)
-        # Sektor-Spalte anpassen, falls vorhanden
-        if 'Sector' in df.columns:
-            df['GICS Sector'] = df['Sector']
-        print(f"Loaded {len(df)} tickers from alternative source")
-        return df
-    except Exception as e:
-        print(f"Alternative source also failed: {e}")
-        raise RuntimeError("Could not load S&P 500 list from any source")
+
+def get_sp500_tickers():
+    """Fetch S&P 500 tickers from a stable GitHub source."""
+    url = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/master/data/constituents.csv"
+    df = pd.read_csv(url)
+    df = df.rename(columns={'Symbol': 'Symbol'})
+    df['yf_ticker'] = df['Symbol'].str.replace('.', '-', regex=False)
+    if 'Sector' in df.columns:
+        df['GICS Sector'] = df['Sector']
+    if 'Name' in df.columns:
+        df['Security'] = df['Name']
+    print(f"Loaded {len(df)} S&P 500 tickers from stable source")
+    return df
 
 def get_sp500_tickers():
     """Fetch current S&P 500 tickers + basic info from Wikipedia."""
