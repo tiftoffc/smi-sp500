@@ -12,12 +12,18 @@ import yfinance as yf
 from datetime import datetime, timezone
 from collections import defaultdict
 import warnings
+import requests
 warnings.filterwarnings('ignore')
 
 def get_sp500_tickers():
     """Fetch current S&P 500 tickers + basic info from Wikipedia."""
     url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
-    tables = pd.read_html(url)
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    response = requests.get(url, headers=headers, timeout=30)
+    response.raise_for_status()
+    tables = pd.read_html(response.text)
     df = tables[0]
     # Clean tickers (BRK.B -> BRK-B for yfinance)
     df['yf_ticker'] = df['Symbol'].str.replace('.', '-', regex=False)
