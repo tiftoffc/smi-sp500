@@ -19,15 +19,22 @@ def get_sp500_tickers():
     """Fetch current S&P 500 tickers + basic info from Wikipedia."""
     url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
     }
-    response = requests.get(url, headers=headers, timeout=30)
-    response.raise_for_status()
-    tables = pd.read_html(response.text)
-    df = tables[0]
-    # Clean tickers (BRK.B -> BRK-B for yfinance)
-    df['yf_ticker'] = df['Symbol'].str.replace('.', '-', regex=False)
-    return df
+    try:
+        response = requests.get(url, headers=headers, timeout=30)
+        response.raise_for_status()
+        tables = pd.read_html(response.text)
+        df = tables[0]
+        df['yf_ticker'] = df['Symbol'].str.replace('.', '-', regex=False)
+        print(f"Successfully loaded {len(df)} S&P 500 tickers from Wikipedia")
+        return df
+    except Exception as e:
+        print(f"Wikipedia fetch failed: {e}")
+        print("Falling back to a static list is not implemented – please check the error above.")
+        raise
 
 def calculate_smi(high, low, close, period=10, smooth1=3, smooth2=3, signal_period=3):
     """Calculate Stochastic Momentum Index (SMI) and signal line."""
