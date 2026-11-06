@@ -166,10 +166,10 @@ def scan():
         'stocks': sorted(results, key=lambda x: x['smi'])  # most oversold first
     }
 
-   with open('public/smi_scan.json', 'w', encoding='utf-8') as f:
-    json.dump(output, f, indent=2, ensure_ascii=False)
+    with open('public/smi_scan.json', 'w', encoding='utf-8') as f:
+        json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print(f"Saved smi_scan.json with {len(results)} titles")
+    print(f"Saved public/smi_scan.json with {len(results)} titles")
     return output
 
 if __name__ == '__main__':
