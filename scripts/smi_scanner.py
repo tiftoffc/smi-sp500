@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 SMI Scanner for S&P 500
-Filter: SMI(10,3,3) <= -40 and SMI > Signal
+Filter: SMI(10,3,3) <= -30 and (SMI - Signal) >= 3
 Additionally calculates RSL (26T / 26W) and RSL vs Sektor.
 Outputs JSON for the WordPress shortcode.
 """
@@ -89,7 +89,8 @@ def scan():
             last_signal = float(signal.iloc[-1])
             diff = last_smi - last_signal
 
-            if not (last_smi <= -40 and last_smi > last_signal):
+            # Neuer Filter: SMI <= -30 und Diff >= 3
+            if not (last_smi <= -30 and diff >= 3):
                 continue
 
             pct_1d = None
