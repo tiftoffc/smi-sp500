@@ -120,3 +120,53 @@ def scan():
                 'revenue': fund['revenue'],
                 'net_income': fund['net_income'],
                 'pct_1d': round(pct_1d, 2) if pct_1d is not None else None,
+                'pct_1w': round(pct_1w, 2) if pct_1w is not None else None,
+                'rsl_26d': round(rsl_26d, 2) if rsl_26d is not None else None,
+                'rsl_26w': round(rsl_26w, 2) if rsl_26w is not None else None,
+                'rsl_vs_sector_26d': None,
+                'rsl_vs_sector_26w': None,
+            })
+
+        except Exception:
+            continue
+
+    print(f"\nFound {len(results)} matches. Calculating RSL vs Sektor...")
+
+    sector_perf = defaultdict(lambda: {'26d': [], '26w': []})
+    for s in results:
+        sec = s.get('sector')
+        if not sec:
+            continue
+        if s['rsl_26d'] is not None:
+            sector_perf[sec]['26d'].append(s['rsl_26d'])
+        if s['rsl_26w'] is not None:
+            sector_perf[sec]['26w'].append(s['rsl_26w'])
+
+    sector_means = {}
+    for sec, vals in sector_perf.items():
+        sector_means[sec] = {
+            '26d': sum(vals['26d']) / len(vals['26d']) if vals['26d'] else None,
+            '26w': sum(vals['26w']) / len(vals['26w']) if vals['26w'] else None,
+        }
+
+    for s in results:
+        sec = s.get('sector')
+        if sec and sec in sector_means:
+            if s['rsl_26d'] is not None and sector_means[sec]['26d'] is not None:
+                s['rsl_vs_sector_26d'] = round(s['rsl_26d'] - sector_means[sec]['26d'], 2)
+            if s['rsl_26w'] is not None and sector_means[sec]['26w'] is not None:
+                s['rsl_vs_sector_26w'] = round(s['rsl_26w'] - sector_means[sec]['26w'], 2)
+
+    output = {
+        'updated': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC'),
+        'stocks': sorted(results, key=lambda x: x['smi'])
+    }
+
+    with open('public/smi_scan.json', 'w', encoding='utf-8') as f:
+        json.dump(output, f, indent=2, ensure_ascii=False)
+
+    print(f"Saved public/smi_scan.json with {len(results)} titles")
+    return output
+
+if __name__ == '__main__':
+    scan()
